@@ -231,8 +231,19 @@ export default function App() {
       if (resultData) {
   const raw = reply || '';
   const paragraphs = raw.split(/\n\s*\n/).map(p => p.trim()).filter(Boolean);
-  const intro = paragraphs.length > 1 ? paragraphs[0] : raw;
-  const descriptions = paragraphs.length > 1 ? paragraphs.slice(1) : [];
+
+  // Match each paragraph to a result card by perfume name, fall back to positional
+  const descriptions = resultData.results.map((r, i) => {
+    const name = r.payload?.Perfume || '';
+    const matched = paragraphs.find(p =>
+      name && p.toLowerCase().includes(name.toLowerCase())
+    );
+    return matched || paragraphs[i + 1] || '';
+  });
+
+  // Intro: first paragraph that doesn't match any card
+  const cardParagraphs = new Set(descriptions.filter(Boolean));
+  const intro = paragraphs.find(p => !cardParagraphs.has(p)) || paragraphs[0] || raw;
 
   setMessages(prev => [...prev, {
     role: 'results',
