@@ -14,7 +14,7 @@ const ROTATING_PROMPTS = [
 const STARTER_CHIPS = [
   "Something woody and dark for evenings",
   "Fresh and marine, unisex",
-  "Warm oriental, like a winter embrace",
+  "Warm oriental, like a summers embrace",
   "Something unexpected — surprise me",
 ];
 
@@ -307,6 +307,16 @@ export default function App() {
         {loading && <TypingIndicator />}
         <div ref={bottomRef} />
       </div>
+
+      {!started && (
+        <div className="starter-chips">
+          {STARTER_CHIPS.map(chip => (
+            <button key={chip} className="starter-chip" onClick={() => send(chip)}>
+              {chip}
+            </button>
+          ))}
+        </div>
+      )}
 
       <div className="input-area" style={{ position: 'relative', zIndex: 1 }}>
         <input
