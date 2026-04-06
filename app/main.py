@@ -1,8 +1,12 @@
-from fastapi import FastAPI, HTTPException
+from contextlib import asynccontextmanager
+from fastapi import FastAPI, HTTPException, Request
+from fastapi.responses import JSONResponse
+from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from dotenv import load_dotenv
 import os
 import json
+import traceback
 
 from app.tools import (
     tool_search_perfumes,
@@ -12,15 +16,58 @@ from app.tools import (
     perfume_name_to_id
 )
 from app.utils import qdrant_client, openai_client, COLLECTION_NAME
-from fastapi import Request
-from fastapi.responses import JSONResponse
-import traceback
-from fastapi.middleware.cors import CORSMiddleware
+from qdrant_client.models import PayloadSchemaType
 
 load_dotenv(r"C:\Perfume_Seeker\.env")
 
+# ── Startup logic ─────────────────────────────────────────────────────────────
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    # Load perfume names from Qdrant into memory
+    print("Loading perfume names from Qdrant...")
+    offset = None
+    all_points = []
+
+    while True:
+        results, offset = qdrant_client.scroll(
+            collection_name=COLLECTION_NAME,
+            with_payload=["Perfume"],
+            limit=1000,
+            offset=offset
+        )
+        all_points.extend(results)
+        if offset is None:
+            break
+
+    for point in all_points:
+        name = point.payload.get("Perfume")
+        if name:
+            perfume_names.append(name)
+            perfume_name_to_id[name] = point.id
+
+    print(f"Loaded {len(perfume_names)} perfume names into memory")
+
+    # Create payload indexes for filtering
+    print("Creating payload indexes...")
+    indexable_fields = [
+        ("Gender", PayloadSchemaType.KEYWORD),
+        ("Brand", PayloadSchemaType.KEYWORD),
+        ("Perfumer1", PayloadSchemaType.KEYWORD),
+        ("Year", PayloadSchemaType.INTEGER),
+        ("notes_combined", PayloadSchemaType.TEXT),
+    ]
+    for field_name, field_type in indexable_fields:
+        qdrant_client.create_payload_index(
+            collection_name=COLLECTION_NAME,
+            field_name=field_name,
+            field_schema=field_type
+        )
+    print("Indexes created")
+
+    yield  # app runs here
+
 # ── FastAPI app ───────────────────────────────────────────────────────────────
-app = FastAPI(title="Sillage — Fragrance Discovery API")
+app = FastAPI(title="Sillage — Fragrance Discovery API", lifespan=lifespan)
 
 app.add_middleware(
     CORSMiddleware,
@@ -155,54 +202,6 @@ def dispatch_tool(tool_name: str, tool_args: dict) -> str:
 # ── System prompt ─────────────────────────────────────────────────────────────
 with open(r"C:\Perfume_Seeker\app\system_prompt.txt", "r", encoding="utf-8") as f:
     SYSTEM_PROMPT = f.read()
-
-# ── Startup — load perfume names into memory ──────────────────────────────────
-@app.on_event("startup")
-async def startup_event():
-    print("Loading perfume names from Qdrant...")
-    offset = None
-    all_points = []
-
-    while True:
-        results, offset = qdrant_client.scroll(
-            collection_name=COLLECTION_NAME,
-            with_payload=["Perfume"],
-            limit=1000,
-            offset=offset
-        )
-        all_points.extend(results)
-        if offset is None:
-            break
-
-    for point in all_points:
-        name = point.payload.get("Perfume")
-        if name:
-            perfume_names.append(name)
-            perfume_name_to_id[name] = point.id
-
-    print(f"Loaded {len(perfume_names)} perfume names into memory")
-
-from qdrant_client.models import PayloadSchemaType
-
-# ── Create payload indexes for filtering ──────────────────────────────────────
-print("Creating payload indexes...")
-
-indexable_fields = [
-    ("Gender", PayloadSchemaType.KEYWORD),
-    ("Brand", PayloadSchemaType.KEYWORD),
-    ("Perfumer1", PayloadSchemaType.KEYWORD),
-    ("Year", PayloadSchemaType.INTEGER),
-    ("notes_combined", PayloadSchemaType.TEXT),
-]
-
-for field_name, field_type in indexable_fields:
-    qdrant_client.create_payload_index(
-        collection_name=COLLECTION_NAME,
-        field_name=field_name,
-        field_schema=field_type
-    )
-
-print("Indexes created")
 
 # ── Request/Response models ───────────────────────────────────────────────────
 class ChatRequest(BaseModel):
