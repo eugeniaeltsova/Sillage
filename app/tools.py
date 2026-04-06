@@ -89,12 +89,16 @@ def tool_search_perfumes(
     )
 
 # ── Compare two perfumes ──────────────────────────────────────────────────────
-def tool_compare_perfumes(name_a: str, name_b: str) -> dict | None:
+def tool_compare_perfumes(name_a: str, name_b: str) -> dict:
     result_a = lookup_perfume(name_a)
     result_b = lookup_perfume(name_b)
 
-    if not result_a or not result_b:
-        return None
+    if not result_a and not result_b:
+        return {"error": f"Neither '{name_a}' nor '{name_b}' were found in the database."}
+    if not result_a:
+        return {"error": f"'{name_a}' was not found in the database."}
+    if not result_b:
+        return {"error": f"'{name_b}' was not found in the database."}
 
     return {
         "perfume_a": result_a["payload"],
@@ -102,8 +106,8 @@ def tool_compare_perfumes(name_a: str, name_b: str) -> dict | None:
     }
 
 # ── Get perfume details ───────────────────────────────────────────────────────
-def tool_get_perfume_details(name: str) -> dict | None:
+def tool_get_perfume_details(name: str) -> dict:
     result = lookup_perfume(name)
     if not result:
-        return None
+        return {"error": f"'{name}' was not found in the database."}
     return result["payload"]
