@@ -1,0 +1,29 @@
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  
+  font-family: 'Georgia', serif;
+  color: #1a1a18;
+  -webkit-font-smoothing: antialiased;
+  background-attachment: fixed;
+  background-image: url('C:\\Perfume_Seeker\\ui\\public\\botanical-bg.jpg');
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+}
+
+::-webkit-scrollbar {
+  width: 4px;
+}
+
+::-webkit-scrollbar-track {
+  background: #faf8f4;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #e0dbd2;
+}

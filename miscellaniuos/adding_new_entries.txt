@@ -1,0 +1,10 @@
+new_perfumes.csv
+      │
+      ▼
+build embedding_text (same function as in 04)
+      │
+      ▼
+generate embeddings via Azure OpenAI
+      │
+      ▼
+upsert into Qdrant starting from id=24063
