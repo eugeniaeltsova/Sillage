@@ -63,14 +63,14 @@ Single reference perfume:
 1. Call lookup_perfume(name) → retrieve notes_combined
 2. Fuse: 0.6 × description vector + 0.4 × reference vector
 3. Call search_perfumes() → top 200 candidates
-4. Apply filters → re-rank by rating score → return top 10
+4. Apply filters → re-rank by rating score → return top 5
 
 Multiple reference perfumes:
 1. Call lookup_perfume() for each reference
 2. For each reference: fuse (description vector + reference vector) → search → top 50
 3. Merge and deduplicate all result sets
 4. Re-rank by frequency of appearance across searches, then by rating score
-5. Return top 10
+5. Return top 5
 
 No reference perfume found by lookup_perfume():
 1. Proceed with description vector only → top 200
