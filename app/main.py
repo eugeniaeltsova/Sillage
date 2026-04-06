@@ -1,7 +1,6 @@
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
 from dotenv import load_dotenv
-from openai import AzureOpenAI
 import os
 import json
 
@@ -12,7 +11,7 @@ from app.tools import (
     perfume_names,
     perfume_name_to_id
 )
-from app.utils import qdrant_client, COLLECTION_NAME
+from app.utils import qdrant_client, openai_client, COLLECTION_NAME
 from fastapi import Request
 from fastapi.responses import JSONResponse
 import traceback
@@ -39,13 +38,6 @@ async def global_exception_handler(request: Request, exc: Exception):
         status_code=500,
         content={"error": str(exc)}
     )
-
-# ── OpenAI client ─────────────────────────────────────────────────────────────
-openai_client = AzureOpenAI(
-    azure_endpoint=os.getenv("AZURE_OPENAI_ENDPOINT"),
-    api_key=os.getenv("AZURE_OPENAI_KEY"),
-    api_version="2024-02-01"
-)
 
 # ── Tool definitions for GPT-4.1 ──────────────────────────────────────────────
 TOOLS = [
