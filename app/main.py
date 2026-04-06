@@ -217,7 +217,8 @@ async def chat(request: ChatRequest):
     messages = [{"role": "system", "content": SYSTEM_PROMPT}] + request.messages
 
     # Agentic loop — keep running until no more tool calls
-    while True:
+    max_iterations = 10
+    for _ in range(max_iterations):
         response = openai_client.chat.completions.create(
             model="gpt-4.1",
             messages=messages,
@@ -266,6 +267,8 @@ async def chat(request: ChatRequest):
                 "tool_call_id": tool_call.id,
                 "content": tool_result
             })
+
+    raise HTTPException(status_code=500, detail="Agent loop exceeded maximum iterations.")
 
 # ── Health check ──────────────────────────────────────────────────────────────
 @app.get("/health")
