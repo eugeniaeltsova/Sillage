@@ -294,16 +294,16 @@ export default function App() {
 
       <div className="chat-area" style={{ position: 'relative', zIndex: 1 }}>
         {!started && <RotatingPrompt />}
-        {messages.map((msg, i) => (
-  <Message
-    key={i}
-    msg={msg}
-    isLatestResults={
-      msg.role === 'results' &&
-      i === messages.map(m => m.role).lastIndexOf('results')
-    }
-  />
-))}
+        {(() => {
+  const lastResultsIndex = messages.map(m => m.role).lastIndexOf('results');
+  return messages.map((msg, i) => (
+    <Message
+      key={i}
+      msg={msg}
+      isLatestResults={msg.role === 'results' && i === lastResultsIndex}
+    />
+  ));
+})()}
         {loading && <TypingIndicator />}
         <div ref={bottomRef} />
       </div>
