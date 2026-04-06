@@ -6,7 +6,7 @@ from dotenv import load_dotenv
 import os
 import unicodedata
 
-load_dotenv(r"C:\Perfume_Seeker\.env")
+load_dotenv()
 
 # ── Clients ───────────────────────────────────────────────────────────────────
 openai_client = AzureOpenAI(

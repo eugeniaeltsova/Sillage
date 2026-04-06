@@ -18,7 +18,7 @@ from app.tools import (
 from app.utils import qdrant_client, openai_client, COLLECTION_NAME
 from qdrant_client.models import PayloadSchemaType
 
-load_dotenv(r"C:\Perfume_Seeker\.env")
+load_dotenv()
 
 # ── Startup logic ─────────────────────────────────────────────────────────────
 @asynccontextmanager
