@@ -141,11 +141,6 @@ TOOLS = [
                         "items": {"type": "string"},
                         "description": "Notes or accords to exclude from results"
                     },
-                    "include_notes": {
-                        "type": "array",
-                        "items": {"type": "string"},
-                        "description": "Notes or accords that must be present in results"
-                    },
                     "top_n": {"type": "integer", "description": "Number of results to return, default 4"}
                 },
                 "required": ["description"]

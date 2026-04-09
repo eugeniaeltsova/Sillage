@@ -56,7 +56,6 @@ def tool_search_perfumes(
     exclude_brands: list[str] = None,
     exclude_perfumers: list[str] = None,
     exclude_notes: list[str] = None,
-    include_notes: list[str] = None,
     top_n: int = 4
 ) -> dict:
 
@@ -86,7 +85,6 @@ def tool_search_perfumes(
         exclude_brands=exclude_brands,
         exclude_perfumers=exclude_perfumers,
         exclude_notes=exclude_notes,
-        include_notes=include_notes,
         top_n=top_n
     )
 

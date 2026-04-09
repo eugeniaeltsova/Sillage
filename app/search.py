@@ -129,8 +129,7 @@ def search_perfumes(
     perfumer: str = None,
     exclude_brands: list[str] = None,       
     exclude_perfumers: list[str] = None,    
-    exclude_notes: list[str] = None,
-    include_notes: list[str] = None,
+    exclude_notes: list[str] = None, 
     top_n: int = 5
 ) -> dict:
 
@@ -191,17 +190,6 @@ def search_perfumes(
             if not any(
                 note in c["payload"].get("notes_combined", "").lower()
                 for note in normalised_excludes
-            )
-        ]
-
-    # ── Include notes (all specified notes must be present) ───────────────────
-    if include_notes:
-        normalised_includes = [n.lower() for n in include_notes]
-        candidates = [
-            c for c in candidates
-            if all(
-                note in c["payload"].get("notes_combined", "").lower()
-                for note in normalised_includes
             )
         ]
 
