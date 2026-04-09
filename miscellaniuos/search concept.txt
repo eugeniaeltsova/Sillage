@@ -58,3 +58,52 @@ Inject dark horse (high ANN score, low rating count, niche)
     │
     ▼
 Return top 10 + flag shop inventory if available
+
+#updated search logic v2
+User input
+    │
+    ▼
+LLM extracts:
+    - description text
+    - referenced perfume names (0, 1 or many)
+    - hard filters: gender, year range, brand, perfumer
+    - exclude_brands, exclude_perfumers, exclude_notes, include_notes
+    │
+    ▼
+Embed description → vector A
+    │
+    ▼
+For each referenced perfume:
+    └─► Look up in Qdrant by name → get notes_combined → embed → vector Bn
+    │
+    ▼
+For each (vector A + vector Bn) pair → Qdrant ANN search → top 50 candidates
+If no reference perfume → vector A alone → top 200
+
+    Hard filters applied inside Qdrant (exact match):
+        - gender, brand, perfumer (must)
+        - year range (must)
+        - exclude_brands, exclude_perfumers (must_not)
+    │
+    ▼
+Merge all result sets + deduplicate
+    │
+    ▼
+Remove reference perfumes from results
+    │
+    ▼
+Python post-filters (substring match against notes_combined, case-insensitive):
+    - exclude_notes: drop candidates containing any excluded note
+    - include_notes: keep only candidates containing all required notes
+    │
+    ▼
+Re-rank by frequency of appearance across result sets
+    │
+    ▼
+Re-rank by rating score
+    │
+    ▼
+Inject dark horse (high ANN score, low rating count, niche)
+    │
+    ▼
+Return top 5 + flag shop inventory if available

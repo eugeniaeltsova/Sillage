@@ -14,8 +14,11 @@ const ROTATING_PROMPTS = [
 const STARTER_CHIPS = [
   "Something woody and dark for evenings",
   "Fresh and marine, unisex",
-  "Warm oriental, like a summers embrace",
+  "Warm oriental, like a summer embrace",
   "Something unexpected — surprise me",
+  "Powerful and musky",
+  "Light and floral, perfect for spring",
+
 ];
 
 
