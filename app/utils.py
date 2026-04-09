@@ -1,3 +1,4 @@
+import functools
 import pandas as pd
 from rapidfuzz import process, fuzz
 from openai import AzureOpenAI
@@ -24,6 +25,7 @@ qdrant_client = QdrantClient(
 COLLECTION_NAME = "perfumes"
 
 # ── Embedding ─────────────────────────────────────────────────────────────────
+@functools.lru_cache(maxsize=256)
 def get_embedding(text: str) -> list:
     response = openai_client.embeddings.create(
         model="text-embedding-3-small",
