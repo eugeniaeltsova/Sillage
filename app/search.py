@@ -1,5 +1,5 @@
 import numpy as np
-from qdrant_client.models import Filter, FieldCondition, MatchValue, Range
+from qdrant_client.models import Filter, FieldCondition, MatchValue, Range, MatchText
 from qdrant_client.models import QueryRequest   
 from app.utils import get_embedding, qdrant_client, COLLECTION_NAME
 
@@ -21,6 +21,8 @@ def build_filter(
     perfumer: str = None,
     exclude_brands: list[str] = None,
     exclude_perfumers: list[str] = None,
+    exclude_notes: list[str] = None,
+    include_notes: list[str] = None,
 ) -> Filter | None:
     conditions = []
     must_not_conditions = []
@@ -59,6 +61,18 @@ def build_filter(
         for p in exclude_perfumers:
             must_not_conditions.append(
                 FieldCondition(key="Perfumer1", match=MatchValue(value=p))
+            )
+
+    if exclude_notes:
+        for note in exclude_notes:
+            must_not_conditions.append(
+                FieldCondition(key="notes_combined", match=MatchText(text=note))
+            )
+
+    if include_notes:
+        for note in include_notes:
+            conditions.append(
+                FieldCondition(key="notes_combined", match=MatchText(text=note))
             )
 
     if not conditions and not must_not_conditions:
@@ -129,7 +143,8 @@ def search_perfumes(
     perfumer: str = None,
     exclude_brands: list[str] = None,       
     exclude_perfumers: list[str] = None,    
-    exclude_notes: list[str] = None, 
+    exclude_notes: list[str] = None,
+    include_notes: list[str] = None,
     top_n: int = 5
 ) -> dict:
 
@@ -142,6 +157,8 @@ def search_perfumes(
         perfumer=perfumer,
         exclude_brands=exclude_brands,
         exclude_perfumers=exclude_perfumers,
+        exclude_notes=exclude_notes,
+        include_notes=include_notes,
     )
 
     # Embed description
@@ -180,17 +197,6 @@ def search_perfumes(
         candidates = [
             c for c in candidates
             if c["id"] not in reference_ids
-        ]
-
-    # ── Exclude notes (substring match against notes_combined) ────────────────
-    if exclude_notes:
-        normalised_excludes = [n.lower() for n in exclude_notes]
-        candidates = [
-            c for c in candidates
-            if not any(
-                note in c["payload"].get("notes_combined", "").lower()
-                for note in normalised_excludes
-            )
         ]
 
     # Extract dark horse before re-ranking
