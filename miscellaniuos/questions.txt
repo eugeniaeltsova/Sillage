@@ -1,3 +1,0 @@
-why is lookup_perfume function  in tools.py not in utils.py?
-how do we define which goes where?
-we should add prohibition for search disclosure in detail (no logic, no code)

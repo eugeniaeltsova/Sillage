@@ -1,6 +1,0 @@
-Hex                 Feel
-#b0a899 Current — very pale
-#9a9080 One step darker — still warm
-#847870 Two steps — readable grey-brown
-#6e6058 Three steps — clearly legible
-#584840 Four steps — strong, almost brown-black

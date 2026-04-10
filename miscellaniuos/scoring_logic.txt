@@ -1,6 +1,0 @@
-score = log10(rating_count + 1) × rating_value
-
-It rewards perfumes that are both well-rated and well-known. 
-The log10 compresses vote counts so that going from 100 to 1,000 votes matters more 
-than going from 10,000 to 100,000. 
-This prevents mega-famous fragrances from completely dominating purely because of volume.
