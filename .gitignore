@@ -5,3 +5,6 @@ node_modules/
 ui/build/
 ui/.env
 *.pyc
+Data_Fragrantica/
+scripts/
+miscellanious
