@@ -11,3 +11,7 @@ miscellanious/
 .DS_Store
 .vscode/
 venv/
+
+ui/public/Print_Rollup.pdf
+ui/public/botanical_A4.png
+
