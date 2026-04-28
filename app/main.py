@@ -205,7 +205,7 @@ def dispatch_tool(tool_name: str, tool_args: dict) -> str:
     return json.dumps(result, ensure_ascii=False)
 
 # ── System prompt ─────────────────────────────────────────────────────────────
-with open(r"C:\Perfume_Seeker\app\system_prompt.txt", "r", encoding="utf-8") as f:
+with open(r"app/system_prompt.txt", "r", encoding="utf-8") as f:
     SYSTEM_PROMPT = f.read()
 
 # ── Request/Response models ───────────────────────────────────────────────────

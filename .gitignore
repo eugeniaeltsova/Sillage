@@ -8,3 +8,6 @@ ui/.env
 Data_Fragrantica/
 scripts/
 miscellanious/
+.DS_Store
+.vscode/
+venv/

@@ -18,11 +18,7 @@ const STARTER_CHIPS = [
   "Something unexpected — surprise me",
   "Powerful and musky",
   "Light and floral, perfect for spring",
-
 ];
-
-
-
 
 function RotatingPrompt() {
   const [index, setIndex] = useState(0);
@@ -34,12 +30,10 @@ function RotatingPrompt() {
       setVisible(false);
       setTimeout(() => {
         setIndex(i => (i + 1) % ROTATING_PROMPTS.length);
-
-        // random position
         setPosition({
           top: `${20 + Math.random() * 60}%`,
-          left: `${35 + Math.random() * 30}%`,  // was 20–80%, now 35–65%
-        });;
+          left: `${35 + Math.random() * 30}%`,
+        });
         setVisible(true);
       }, 2000);
     }, 4000);
@@ -47,15 +41,16 @@ function RotatingPrompt() {
   }, []);
 
   return (
-    <div className="rotating-prompt" style={{ opacity: visible ? 0.5 : 0,
-    position: 'absolute', 
-    top: position.top, 
-    left: position.left,
-    transform: "translate(-50%, -50%)",
-    transition: "opacity 2s ease-in-out",
-    pointerEvents: "none", }}>  
-    {ROTATING_PROMPTS[index]}
-    
+    <div className="rotating-prompt" style={{
+      opacity: visible ? 0.5 : 0,
+      position: 'absolute',
+      top: position.top,
+      left: position.left,
+      transform: "translate(-50%, -50%)",
+      transition: "opacity 2s ease-in-out",
+      pointerEvents: "none",
+    }}>
+      {ROTATING_PROMPTS[index]}
     </div>
   );
 }
@@ -117,40 +112,41 @@ function ResultCard({ result, index, isDarkHorse, description }) {
   );
 }
 
-function Message({ msg, isLatestResults }) {
-  if (msg.role === 'results') {
-    if (!isLatestResults) return null;
+// Result blocks are always rendered — never hidden.
+// Each block is self-contained with its own frozen descriptions.
+function ResultBlock({ msg }) {
+  const { intro, descriptions = [], results, hasDarkHorse, searchId } = msg;
 
-    const { intro, descriptions = [], results, hasDarkHorse } = msg;
-
-    return (
-      <div className="results-block">
-        {intro && (
-          <div className="msg assistant">
-            <div className="msg-label">Sillage</div>
-            <div className="msg-bubble">{intro}</div>
-          </div>
-        )}
-
-        {results.length === 0 && (
-          <div className="msg-bubble">{msg.reply}</div>
-        )}
-
-        {results.map((r, i) => (
-          <ResultCard
-            key={r.id}
-            result={r}
-            index={i}
-            isDarkHorse={i === results.length - 1 && hasDarkHorse}
-            description={descriptions[i] || ''}
-          />
-        ))}
-
-        <div className="results-followup">
-          Tell me what you think — or shall I refine the selection?
+  return (
+    <div className="results-block">
+      {intro && (
+        <div className="msg assistant">
+          <div className="msg-label">Sillage</div>
+          <div className="msg-bubble">{intro}</div>
         </div>
+      )}
+      {results.length === 0 && (
+        <div className="msg-bubble">{msg.reply}</div>
+      )}
+      {results.map((r, i) => (
+        <ResultCard
+          key={`${searchId}-${r.id}`}
+          result={r}
+          index={i}
+          isDarkHorse={i === results.length - 1 && hasDarkHorse}
+          description={descriptions[i] || ''}
+        />
+      ))}
+      <div className="results-followup">
+        Tell me what you think — or shall I refine the selection?
       </div>
-    );
+    </div>
+  );
+}
+
+function Message({ msg }) {
+  if (msg.role === 'results') {
+    return <ResultBlock msg={msg} />;
   }
 
   return (
@@ -180,27 +176,39 @@ export default function App() {
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
   const [started, setStarted] = useState(false);
+  // Ref to the scrollable chat div itself
+  const chatAreaRef = useRef(null);
+  // Sentinel div at the very bottom — used to scroll text messages into view
   const bottomRef = useRef(null);
 
   useEffect(() => {
-  const lastMsg = messages[messages.length - 1];
-  if (lastMsg?.role === 'results') return;
+    const lastMsg = messages[messages.length - 1];
 
-  const isNearBottom =
-    window.innerHeight + window.scrollY >= document.body.offsetHeight - 100;
+    if (lastMsg?.role === 'results') {
+      // Scroll the top of the result block into view so intro + first card are visible
+      const el = chatAreaRef.current;
+      if (!el) return;
+      const blocks = el.querySelectorAll('.results-block');
+      const last = blocks[blocks.length - 1];
+      if (last) {
+        last.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
+      return;
+    }
 
-  if (isNearBottom) {
-    bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }
-}, [messages, loading]);
-  
+    // For user/assistant text messages and the typing indicator:
+    // defer one frame so the DOM has painted before we measure scroll height
+    const id = setTimeout(() => {
+      bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
+    }, 50);
+    return () => clearTimeout(id);
+  }, [messages, loading]);
 
   const send = async (text) => {
     if (!text.trim() || loading) return;
     setStarted(true);
     setInput('');
 
-    const userMsg = { role: 'user', content: text };
     const newApiMessages = [...apiMessages, { role: 'user', content: text }];
 
     setMessages(prev => [...prev, { role: 'user', content: text }]);
@@ -214,7 +222,7 @@ export default function App() {
 
       const { reply, messages: updatedMessages } = res.data;
 
-      // Parse results from the last tool message
+      // Find the last tool message that contains search results
       let resultData = null;
       for (let i = updatedMessages.length - 1; i >= 0; i--) {
         const m = updatedMessages[i];
@@ -232,31 +240,31 @@ export default function App() {
       setApiMessages(updatedMessages);
 
       if (resultData) {
-  const raw = reply || '';
-  const paragraphs = raw.split(/\n\s*\n/).map(p => p.trim()).filter(Boolean);
+        const raw = reply || '';
+        const paragraphs = raw.split(/\n\s*\n/).map(p => p.trim()).filter(Boolean);
 
-  // Match each paragraph to a result card by perfume name, fall back to positional
-  const descriptions = resultData.results.map((r, i) => {
-    const name = r.payload?.Perfume || '';
-    const matched = paragraphs.find(p =>
-      name && p.toLowerCase().includes(name.toLowerCase())
-    );
-    return matched || paragraphs[i + 1] || '';
-  });
+        // Freeze descriptions at arrival time — match by perfume name, fall back to position
+        const descriptions = resultData.results.map((r, i) => {
+          const name = r.payload?.Perfume || '';
+          const matched = paragraphs.find(p =>
+            name && p.toLowerCase().includes(name.toLowerCase())
+          );
+          return matched || paragraphs[i + 1] || '';
+        });
 
-  // Intro: first paragraph that doesn't match any card
-  const cardParagraphs = new Set(descriptions.filter(Boolean));
-  const intro = paragraphs.find(p => !cardParagraphs.has(p)) || paragraphs[0] || raw;
+        const cardParagraphs = new Set(descriptions.filter(Boolean));
+        const intro = paragraphs.find(p => !cardParagraphs.has(p)) || paragraphs[0] || raw;
 
-  setMessages(prev => [...prev, {
-    role: 'results',
-    results: resultData.results,
-    hasDarkHorse: resultData.dark_horse,
-    reply,
-    intro,
-    descriptions,
-  }]);
-} else {
+        setMessages(prev => [...prev, {
+          role: 'results',
+          searchId: Date.now(),
+          results: resultData.results,
+          hasDarkHorse: resultData.dark_horse,
+          reply,
+          intro,
+          descriptions,
+        }]);
+      } else {
         setMessages(prev => [...prev, { role: 'assistant', content: reply }]);
       }
     } catch (err) {
@@ -278,8 +286,6 @@ export default function App() {
 
   return (
     <div className="app">
-     
-      
       <header className="header" style={{ position: 'relative', zIndex: 1 }}>
         <div className="logo">Sillage</div>
         <div className="tagline">Fragrance Discovery</div>
@@ -293,20 +299,12 @@ export default function App() {
         </button>
       </header>
 
-    
-
-      <div className="chat-area" style={{ position: 'relative', zIndex: 1 }}>
+      {/* ref is now on the scrollable div itself */}
+      <div className="chat-area" ref={chatAreaRef} style={{ position: 'relative', zIndex: 1 }}>
         {!started && <RotatingPrompt />}
-        {(() => {
-  const lastResultsIndex = messages.map(m => m.role).lastIndexOf('results');
-  return messages.map((msg, i) => (
-    <Message
-      key={i}
-      msg={msg}
-      isLatestResults={msg.role === 'results' && i === lastResultsIndex}
-    />
-  ));
-})()}
+        {messages.map((msg, i) => (
+          <Message key={i} msg={msg} />
+        ))}
         {loading && <TypingIndicator />}
         <div ref={bottomRef} />
       </div>

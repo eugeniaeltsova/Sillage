@@ -10,7 +10,7 @@ body {
   color: #1a1a18;
   -webkit-font-smoothing: antialiased;
   background-attachment: fixed;
-  background-image: url('C:\\Perfume_Seeker\\ui\\public\\botanical-bg.jpg');
+  background-image: url('../public/botanical-bg.jpg');
   background-size: cover;
   background-position: center;
   background-repeat: no-repeat;
